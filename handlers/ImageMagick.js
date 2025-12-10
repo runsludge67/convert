@@ -73,6 +73,20 @@ async function init () {
     return priorityIndexB - priorityIndexA;
   });
 
+  /**
+   * This entry seems to be inaccurate, but I'm not entirely sure why.
+   * This is *supposed* to be "Compressed SVG", but the output is just
+   * an *uncompressed* SVG containing a base64 image.
+   *
+   * I'm guessing that "svgz" is used to imply that this isn't a "natural"
+   * SVG. However, in our case, we're not aiming for anything more than
+   * that in the majorify of cases.
+   */
+  const svgzFormat = supportedFormats.find(c => c.format === "svgz");
+  svgzFormat.name = "Scalable Vector Graphics";
+  svgzFormat.format = "svg";
+  svgzFormat.extension = "svg";
+
 }
 
 async function doConvert (inputFile, inputFormat, outputFormat, retryWithArgs = null) {
