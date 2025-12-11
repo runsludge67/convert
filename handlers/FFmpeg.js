@@ -99,26 +99,20 @@ async function init () {
 
 }
 
-async function doConvert (inputFile, inputFormat, outputFormat, retryWithArgs = null) {
+async function doConvert (inputFiles, inputFormat, outputFormat, retryWithArgs = null) {
 
   await ffmpeg.load();
 
   let stdout = "";
   const readStdout = ({ message }) => stdout += message + "\n";
 
-  let command;
-  if (Array.isArray(inputFile)) {
-    for (const file of inputFile) {
-      await ffmpeg.writeFile(file.name, new Uint8Array(file.bytes));
-    }
-    const listString = inputFile.map((f, i) => `file '${f.name}'`).join("\n");
-    await ffmpeg.writeFile("list.txt", new TextEncoder().encode(listString));
-    command = ["-hide_banner", "-f", "concat", "-safe", "0", "-i", "list.txt", "-f", outputFormat.internal];
-  } else {
-    await ffmpeg.writeFile(inputFile.name, new Uint8Array(inputFile.bytes));
-    command = ["-hide_banner", "-i", inputFile.name, "-f", outputFormat.internal];
+  for (const file of inputFiles) {
+    await ffmpeg.writeFile(file.name, new Uint8Array(file.bytes));
   }
+  const listString = inputFiles.map((f, i) => `file '${f.name}'`).join("\n");
+  await ffmpeg.writeFile("list.txt", new TextEncoder().encode(listString));
 
+  const command = ["-hide_banner", "-f", "concat", "-safe", "0", "-i", "list.txt", "-f", outputFormat.internal];
   if (retryWithArgs) command.push(...retryWithArgs);
   command.push("output");
 
@@ -126,12 +120,8 @@ async function doConvert (inputFile, inputFormat, outputFormat, retryWithArgs = 
   await ffmpeg.exec(command);
   ffmpeg.off("log", readStdout);
 
-  if (Array.isArray(inputFile)) {
-    for (const file of inputFile) {
-      await ffmpeg.deleteFile(file.name);
-    }
-  } else {
-    await ffmpeg.deleteFile(inputFile.name);
+  for (const file of inputFiles) {
+    await ffmpeg.deleteFile(file.name);
   }
 
   if (stdout.includes("Conversion failed!\n")) {
@@ -139,7 +129,7 @@ async function doConvert (inputFile, inputFormat, outputFormat, retryWithArgs = 
     if (!retryWithArgs) {
       if (stdout.includes("Valid sizes are")) {
         const newSize = stdout.split("Valid sizes are ")[1].split(".")[0].split(" ").pop();
-        return doConvert(inputFile, inputFormat, outputFormat, ["-s", newSize]);
+        return doConvert(inputFiles, inputFormat, outputFormat, ["-s", newSize]);
       }
     }
 
@@ -150,12 +140,7 @@ async function doConvert (inputFile, inputFormat, outputFormat, retryWithArgs = 
   await ffmpeg.deleteFile("output");
   await ffmpeg.terminate();
 
-  let baseName;
-  if (Array.isArray(inputFile)) {
-    baseName = inputFile[0].name.split(".")[0];
-  } else {
-    baseName = inputFile.name.split(".")[0];
-  }
+  const baseName = inputFiles[0].name.split(".")[0];
   const name = baseName + "." + outputFormat.extension;
 
   return [{ bytes, name }];
