@@ -2,7 +2,7 @@ name: Publish to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
   pull_request:
 
 permissions:
@@ -35,15 +35,15 @@ jobs:
         run: bun run build
 
       - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
