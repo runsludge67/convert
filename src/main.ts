@@ -190,6 +190,38 @@ window.printSupportedFormatCache = () => {
   return JSON.stringify(entries, null, 2);
 }
 
+// Timer for showing elapsed time during conversion
+let conversionTimer: number | null = null;
+let conversionStartTime: number = 0;
+let currentConversionPath: string = "";
+
+function startConversionTimer() {
+  conversionStartTime = Date.now();
+  updateConversionTimer();
+}
+
+function updateConversionTimer() {
+  const elapsed = Date.now() - conversionStartTime;
+  const seconds = (elapsed / 1000).toFixed(1);
+  
+  ui.popupBox.innerHTML = `<h2>Converting...</h2>
+    <p>Elapsed time: <b>${seconds}s</b></p>
+    ${currentConversionPath ? `<p>Path: <b>${currentConversionPath}</b></p>` : ''}`;
+  
+  conversionTimer = window.setTimeout(updateConversionTimer, 100);
+}
+
+function stopConversionTimer() {
+  if (conversionTimer !== null) {
+    clearTimeout(conversionTimer);
+    conversionTimer = null;
+  }
+}
+
+function getElapsedTime(): string {
+  const elapsed = Date.now() - conversionStartTime;
+  return (elapsed / 1000).toFixed(2);
+}
 
 async function buildOptionList () {
 
@@ -314,8 +346,8 @@ ui.modeToggleButton.addEventListener("click", () => {
 
 async function attemptConvertPath (files: FileData[], path: ConvertPathNode[]) {
 
-  ui.popupBox.innerHTML = `<h2>Finding conversion route...</h2>
-    <p>Trying <b>${path.map(c => c.format.format).join(" → ")}</b>...</p>`;
+  // Update the current path being tried
+  currentConversionPath = path.map(c => c.format.format).join(" → ");
 
   for (let i = 0; i < path.length - 1; i ++) {
     const handler = path[i + 1].handler;
@@ -398,9 +430,16 @@ ui.convertButton.onclick = async function () {
       inputFileData.push({ name: inputFile.name, bytes: inputBytes });
     }
 
-    window.showPopup("<h2>Finding conversion route...</h2>");
+    // Start the timer and show the popup
+    window.showPopup("<h2>Starting conversion...</h2>");
+    startConversionTimer();
 
     const output = await tryConvertByTraversing(inputFileData, inputOption, outputOption);
+    
+    // Stop the timer
+    stopConversionTimer();
+    const elapsedTime = getElapsedTime();
+
     if (!output) {
       window.hidePopup();
       alert("Failed to find conversion route.");
@@ -413,12 +452,14 @@ ui.convertButton.onclick = async function () {
 
     window.showPopup(
       `<h2>Converted ${inputOption.format.format} to ${outputOption.format.format}!</h2>` +
-      `<p>Path used: <b>${output.path.map(c => c.format.format).join(" → ")}</b>.</p>\n` +
+      `<p>Time taken: <b>${elapsedTime}s</b></p>` +
+      `<p>Path used: <b>${output.path.map(c => c.format.format).join(" → ")}</b></p>\n` +
       `<button onclick="window.hidePopup()">OK</button>`
     );
 
   } catch (e) {
 
+    stopConversionTimer();
     window.hidePopup();
     alert("Unexpected error while routing:\n" + e);
     console.error(e);
