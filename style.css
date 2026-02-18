@@ -186,7 +186,7 @@ body {
 
 #file-area {
   width: 100%;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 35%, #3b82f6 100%);
   border-radius: 20px;
   padding: 3.5em 2em;
   display: flex;
@@ -202,6 +202,15 @@ body {
   position: relative;
   overflow: hidden;
 }
+[data-theme="dark"] #file-area {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 35%, #3b82f6 100%);
+}
+[data-mode="advanced"] #file-area {
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 25%, #ea580c 60%, #dc2626 85%, #be123c 100%);
+}
+[data-theme="dark"][data-mode="advanced"] #file-area {
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 25%, #dc2626 65%, #be123c 90%, #9f1239 100%);
+}
 #file-area::before {
   content: '';
   position: absolute;
@@ -211,6 +220,7 @@ body {
   pointer-events: none;
 }
 #file-area:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(37,99,255,0.28); filter: brightness(1.04); }
+[data-mode="advanced"] #file-area:hover { box-shadow: 0 16px 48px rgba(249,115,22,0.35); }
 #file-area:active { transform: translateY(0); }
 #file-area.drag-over { transform: scale(1.02); filter: brightness(1.08); box-shadow: 0 0 0 4px var(--accent), var(--shadow-lg); }
 
