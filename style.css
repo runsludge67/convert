@@ -264,7 +264,7 @@ body {
 #upload-actions button:hover { background: var(--bg-subtle); color: var(--accent); border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-md); }
 #upload-actions button:active { transform: translateY(0); }
 #mode-button.active { background: var(--accent); color: white; border-color: var(--accent); }
-#mode-button.active:hover { filter: brightness(1.1); color: white; }
+#mode-button.active:hover { filter: brightness(1.1); color: white; background-color: var(--accent) }
 
 #convert-state { gap: 0; }
 
